@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>シャチ育成クイズゲーム</title>
+
+<style>
+  #orcaImage {
+  animation: swim 8s ease-in-out infinite;
+}
+
+@keyframes swim {
+  0% {
+    transform: translate(0px, 0px) rotate(-3deg);
+  }
+
+  25% {
+    transform: translate(15px, -8px) rotate(0deg);
+  }
+
+  50% {
+    transform: translate(0px, -15px) rotate(3deg);
+  }
+
+  75% {
+    transform: translate(-15px, -8px) rotate(0deg);
+  }
+
+  100% {
+    transform: translate(0px, 0px) rotate(-3deg);
+  }
+}
+img {
+  width: 200px;
+  margin: 10px;
+  transition: 0.3s;
+}
+
+  body {
+    text-align: center;
+    font-family: sans-serif;
+    background-size: cover;
+    color: white;
+          margin: 0;
+      padding: 0;
+  background-image: url("images/undersea.jpg");
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+      height: 100vh;
+      overflow: hidden;
+  }
+  
+    .wave-container {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 150px;
+      overflow: hidden;
+    }
+
+    .wave {
+      position: absolute;
+      width: 200%;
+      height: 100%;
+      background: linear-gradient(45deg, #4facfe, #00f2fe);
+      clip-path: url(#wavePath);
+      animation: waveAnimation 5s infinite linear;
+    }
+
+    @keyframes waveAnimation {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-50%); }
+    }
+
+  .container {
+    background: rgba(0,0,0,0.6);
+    padding: 20px;
+    margin: 50px auto;
+    width: 400px;
+    border-radius: 15px;
+  }
+
+  button {
+    padding: 10px 20px;
+    margin: 5px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  img {
+    width: 200px;
+    margin: 10px;
+  }
+  .bubble-background {
+  position: relative;
+
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* 泡の見た目 */
+.bubble {
+  position: absolute;
+  bottom: -50px;
+  background-color: transparent;
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: inset 0 0 10px rgba(255,255,255,0.2);
+  animation: bubble 8s linear infinite;
+}
+
+/* 泡の一番明るい部分を疑似要素で表現 */
+.bubble::before {
+  content: "";
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  transform: scale(0.25) translate(-70%, -70%);
+  background: radial-gradient(rgba(255,255,255, 0.5), transparent);
+  border-radius: 50%;
+}
+
+/* 泡が上に浮かび上がっていくアニメーション */
+@keyframes bubble {
+  0% {
+   transform: translateY(0);
+    opacity: 1;
+  }
+  99% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh);
+    opacity: 0;
+  }
+}
+
+#foodImage {
+  transition: all 1s;
+  z-index: 100;
+}
+
+</style>
+</head>
+<body>
+   <div class="wave-container">
+    <div class="wave">
+    </div>
+   </div>
+      <div class="bubble-background">
+
+  <div class="container">
+  <h1>🐋 シャチ育成クイズゲーム</h1>
+
+  <!-- ★ここが重要！画像追加 -->
+  <img id="orcaImage" src="images/orca3.png">
+<img id="foodImage" src="" style="
+  position:absolute;
+  width:80px;
+  display:none;
+  left:50%;
+  top:180px;
+  transform:translateX(-50%);
+">
+  <div id="game"></div>
+</div>
+</div>
+<script>
+const questions = [{
+  question: "1 + 1 は？",
+  options: ["1", "2", "3", "4"],
+  answer: "2"
+},
+{
+  question: "2 + 3 は？",
+  options: ["4", "5", "6", "7"],
+  answer: "5"
+},
+{
+  question: "5 + 2 は？",
+  options: ["6", "7", "8", "9"],
+  answer: "7"
+},
+{
+  question: "4 + 4 は？",
+  options: ["6", "7", "8", "9"],
+  answer: "8"
+},
+{
+  question: "3 + 6 は？",
+  options: ["7", "8", "9", "10"],
+  answer: "9"
+},
+{
+  question: "7 + 2 は？",
+  options: ["8", "9", "10", "11"],
+  answer: "9"
+},
+{
+  question: "5 + 5 は？",
+  options: ["9", "10", "11", "12"],
+  answer: "10"
+},
+{
+  question: "8 + 1 は？",
+  options: ["7", "8", "9", "10"],
+  answer: "9"
+},
+{
+  question: "6 + 3 は？",
+  options: ["8", "9", "10", "11"],
+  answer: "9"
+},
+{
+  question: "9 + 1 は？",
+  options: ["8", "9", "10", "11"],
+  answer: "10"
+},
+{
+  question: "5 - 2 は？",
+  options: ["2", "3", "4", "5"],
+  answer: "3"
+},
+{
+  question: "8 - 3 は？",
+  options: ["4", "5", "6", "7"],
+  answer: "5"
+},
+{
+  question: "10 - 4 は？",
+  options: ["5", "6", "7", "8"],
+  answer: "6"
+},
+{
+  question: "7 - 5 は？",
+  options: ["1", "2", "3", "4"],
+  answer: "2"
+},
+{
+  question: "9 - 2 は？",
+  options: ["6", "7", "8", "9"],
+  answer: "7"
+},
+{
+  question: "6 - 1 は？",
+  options: ["4", "5", "6", "7"],
+  answer: "5"
+},
+{
+  question: "8 - 6 は？",
+  options: ["1", "2", "3", "4"],
+  answer: "2"
+},
+{
+  question: "10 - 7 は？",
+  options: ["2", "3", "4", "5"],
+  answer: "3"
+},
+{
+  question: "9 - 5 は？",
+  options: ["3", "4", "5", "6"],
+  answer: "4"
+},
+{
+  question: "7 - 4 は？",
+  options: ["2", "3", "4", "5"],
+  answer: "3"
+},
+{
+  question: "5より大きい数は？",
+  options: ["3", "4", "5", "6"],
+  answer: "6"
+},
+{
+  question: "8より小さい数は？",
+  options: ["9", "10", "8", "7"],
+  answer: "7"
+},
+{
+  question: "10の次の数は？",
+  options: ["9", "10", "11", "12"],
+  answer: "11"
+},
+{
+  question: "1番大きい数は？",
+  options: ["3", "7", "5", "6"],
+  answer: "7"
+},
+{
+  question: "1番小さい数は？",
+  options: ["8", "4", "9", "7"],
+  answer: "4"
+},
+{
+  question: "りんごが2こあります。3こもらいました。全部で？",
+  options: ["4", "5", "6", "7"],
+  answer: "5"
+},
+{
+  question: "あめが8こあります。2こ食べました。のこりは？",
+  options: ["5", "6", "7", "8"],
+  answer: "6"
+},
+{
+  question: "えんぴつが4本あります。1本もらいました。全部で？",
+  options: ["4", "5", "6", "7"],
+  answer: "5"
+},
+{
+  question: "10から1へると？",
+  options: ["8", "9", "10", "11"],
+  answer: "9"
+},
+{
+  question: "6に2をたすと？",
+  options: ["7", "8", "9", "10"],
+  answer: "8"
+},{
+  question: "『いぬ』のはじめの文字は？",
+  options: ["あ", "い", "う", "え"],
+  answer: "い"
+},
+{
+  question: "『さくら』の文字は何文字？",
+  options: ["2", "3", "4", "5"],
+  answer: "3"
+},
+{
+  question: "『くるま』のさいごの文字は？",
+  options: ["く", "る", "ま", "ら"],
+  answer: "ま"
+},
+{
+  question: "『ねこ』の文字は何文字？",
+  options: ["1", "2", "3", "4"],
+  answer: "2"
+},
+{
+  question: "『りんご』のはじめの文字は？",
+  options: ["り", "ん", "ご", "ら"],
+  answer: "り"
+},
+{
+  question: "『ありがとう』と言うのはどんなとき？",
+  options: ["おこるとき", "かんしゃするとき", "ねるとき", "あそぶとき"],
+  answer: "かんしゃするとき"
+},
+{
+  question: "『ごめんなさい』と言うのはどんなとき？",
+  options: ["あやまるとき", "わらうとき", "ねるとき", "たべるとき"],
+  answer: "あやまるとき"
+},
+{
+  question: "『おはよう』と言うのはいつ？",
+  options: ["あさ", "ひる", "よる", "まよなか"],
+  answer: "あさ"
+},
+{
+  question: "『こんばんは』と言うのは？",
+  options: ["あさ", "ひる", "ゆうがた・よる", "ひるま"],
+  answer: "ゆうがた・よる"
+},
+{
+  question: "『あ』のつぎは？",
+  options: ["い", "う", "え", "お"],
+  answer: "い"
+},
+{
+  question: "『か』のつぎは？",
+  options: ["き", "く", "け", "こ"],
+  answer: "き"
+},
+{
+  question: "『さ』のつぎは？",
+  options: ["し", "す", "せ", "そ"],
+  answer: "し"
+},
+{
+  question: "『た』のつぎは？",
+  options: ["ち", "つ", "て", "と"],
+  answer: "ち"
+},
+{
+  question: "『な』のつぎは？",
+  options: ["に", "ぬ", "ね", "の"],
+  answer: "に"
+},
+{
+  question: "『は』のつぎは？",
+  options: ["ひ", "ふ", "へ", "ほ"],
+  answer: "ひ"
+},
+{
+  question: "『ま』のつぎは？",
+  options: ["み", "む", "め", "も"],
+  answer: "み"
+},
+{
+  question: "『や』のつぎは？",
+  options: ["ゆ", "よ", "ら", "り"],
+  answer: "ゆ"
+},
+{
+  question: "『ら』のつぎは？",
+  options: ["り", "る", "れ", "ろ"],
+  answer: "り"
+},
+{
+  question: "『わ』のつぎは？",
+  options: ["を", "ん", "や", "ら"],
+  answer: "を"
+},
+{
+  question: "『りんご』はどれ？",
+  options: ["🍎", "🐟", "🚗", "🌸"],
+  answer: "🍎"
+},
+{
+  question: "『そら』はどれ？",
+  options: ["☁️", "🚗", "🍙", "📚"],
+  answer: "☁️"
+},
+{
+  question: "『みず』はどれ？",
+  options: ["💧", "🔥", "🌳", "🏠"],
+  answer: "💧"
+},
+{
+  question: "『さかな』がすむところは？",
+  options: ["うみ", "そら", "やま", "もり"],
+  answer: "うみ"
+},
+{
+  question: "『とり』はどこをとぶ？",
+  options: ["そら", "みず", "じめん", "うみ"],
+  answer: "そら"
+},
+{
+  question: "『あつい』のはんたいは？",
+  options: ["さむい", "たかい", "おおきい", "あかい"],
+  answer: "さむい"
+},
+{
+  question: "『おおきい』のはんたいは？",
+  options: ["ちいさい", "ながい", "あつい", "あかい"],
+  answer: "ちいさい"
+},
+{
+  question: "『うえ』のはんたいは？",
+  options: ["した", "みぎ", "ひだり", "まえ"],
+  answer: "した"
+},
+{
+  question: "『ひる』のあとにくるのは？",
+  options: ["ゆうがた", "あさ", "よる", "まよなか"],
+  answer: "ゆうがた"
+},
+{
+  question: "『にほん』をひらがなで書くと？",
+  options: ["にほん", "ニホン", "日本", "にっぽんご"],
+  answer: "にほん"
+},
+{
+  question: "『せんせい』はどこにいることが多い？",
+  options: ["学校", "海", "山", "駅"],
+  answer: "学校"
+},
+  {
+    question: "シャチはどこに住んでいる？",
+    options: ["海", "砂漠", "森", "山"],
+    answer: "海"
+  },
+  {
+    question: "シャチの主な食べ物は？",
+    options: ["草", "魚", "虫", "木の実"],
+    answer: "魚"
+  },
+    {
+    question: "シャチの主な食べ物は？",
+    options: ["草", "魚", "虫", "木の実"],
+    answer: "魚"
+  },
+  {
+  question: "信号が赤のときは？",
+  options: ["わたる", "とまる", "はしる", "ジャンプする"],
+  answer: "とまる"
+},
+{
+  question: "ごはんの前にすることは？",
+  options: ["手をあらう", "ねる", "ゲームをする", "テレビを見る"],
+  answer: "手をあらう"
+},
+{
+  question: "あめの日につかうものは？",
+  options: ["かさ", "うきわ", "そり", "ぼうし"],
+  answer: "かさ"
+},
+{
+  question: "はるにさく花は？",
+  options: ["さくら", "ひまわり", "コスモス", "あさがお"],
+  answer: "さくら"
+},
+{
+  question: "なつにさく花は？",
+  options: ["ひまわり", "さくら", "うめ", "つばき"],
+  answer: "ひまわり"
+},
+{
+  question: "あきに見られるものは？",
+  options: ["もみじ", "さくら", "ゆき", "こおり"],
+  answer: "もみじ"
+},
+{
+  question: "ふゆによくふるものは？",
+  options: ["ゆき", "さくら", "あめだけ", "はな"],
+  answer: "ゆき"
+},
+{
+  question: "学校で本を読む場所は？",
+  options: ["図書室", "プール", "校庭", "体育館"],
+  answer: "図書室"
+},
+{
+  question: "体育をする場所は？",
+  options: ["体育館", "図書室", "音楽室", "保健室"],
+  answer: "体育館"
+},
+{
+  question: "音楽をべんきょうする部屋は？",
+  options: ["音楽室", "図書室", "理科室", "給食室"],
+  answer: "音楽室"
+},
+{
+  question: "のどがかわいたら何を飲む？",
+  options: ["水", "えんぴつ", "ぼうし", "くつ"],
+  answer: "水"
+},
+{
+  question: "歯をきれいにするものは？",
+  options: ["歯ブラシ", "スプーン", "フォーク", "タオル"],
+  answer: "歯ブラシ"
+},
+{
+  question: "夜になったらすることは？",
+  options: ["ねる", "学校へ行く", "朝ごはんを食べる", "プールへ行く"],
+  answer: "ねる"
+},
+{
+  question: "朝おきたらすることは？",
+  options: ["顔をあらう", "ねる", "電気を消す", "夕ごはんを食べる"],
+  answer: "顔をあらう"
+},
+{
+  question: "学校へ行く日は？",
+  options: ["へいじつ", "毎日夜", "お正月だけ", "夏休みだけ"],
+  answer: "へいじつ"
+},
+{
+  question: "ランドセルを使うのは？",
+  options: ["学校へ行くとき", "おふろ", "ねるとき", "プール"],
+  answer: "学校へ行くとき"
+},
+{
+  question: "ごみはどうする？",
+  options: ["ごみばこにすてる", "道にすてる", "川にすてる", "そのままにする"],
+  answer: "ごみばこにすてる"
+},
+{
+  question: "友だちに物をかりるときは？",
+  options: ["『かしてください』と言う", "だまって使う", "なくす", "かえさない"],
+  answer: "『かしてください』と言う"
+},
+{
+  question: "かりた物はどうする？",
+  options: ["かえす", "すてる", "もらう", "なくす"],
+  answer: "かえす"
+},
+{
+  question: "おせわになった人には？",
+  options: ["ありがとう", "さようなら", "いただきます", "おやすみ"],
+  answer: "ありがとう"
+},
+{
+  question: "ごはんの前に言うことは？",
+  options: ["いただきます", "ごちそうさま", "こんにちは", "おやすみ"],
+  answer: "いただきます"
+},
+{
+  question: "ごはんを食べ終わったら？",
+  options: ["ごちそうさま", "いただきます", "こんばんは", "いってきます"],
+  answer: "ごちそうさま"
+},
+{
+  question: "横断歩道をわたる前にすることは？",
+  options: ["右・左を見る", "目をつぶる", "走る", "ジャンプする"],
+  answer: "右・左を見る"
+},
+{
+  question: "くつをはくのは？",
+  options: ["外へ行くとき", "ねるとき", "おふろ", "プール"],
+  answer: "外へ行くとき"
+},
+{
+  question: "うみにいる生きものは？",
+  options: ["さかな", "ライオン", "うし", "いぬ"],
+  answer: "さかな"
+},
+{
+  question: "空をとぶ生きものは？",
+  options: ["とり", "さかな", "いぬ", "ねこ"],
+  answer: "とり"
+},
+{
+  question: "くだものはどれ？",
+  options: ["りんご", "にんじん", "きゅうり", "キャベツ"],
+  answer: "りんご"
+},
+{
+  question: "やさいはどれ？",
+  options: ["にんじん", "りんご", "みかん", "ぶどう"],
+  answer: "にんじん"
+},
+{
+  question: "太陽が出るのは？",
+  options: ["昼", "夜", "真夜中", "夕方だけ"],
+  answer: "昼"
+},
+{
+  question: "月が見えることが多いのは？",
+  options: ["夜", "朝", "昼", "夕方だけ"],
+  answer: "夜"
+}
+];
+
+let index = 0;
+let score = 0;
+let happiness = 50;
+
+function updateOrcaImage() {
+  const img = document.getElementById("orcaImage");
+
+  if (happiness >= 1000) {
+    img.src = "images/orca_king.png";
+    document.body.style.backgroundImage =
+      "url('images/ending.jpg')";
+    return;
+  }
+
+  if (happiness <= 0) {
+    img.src = "images/orca6.png";
+  } else if (happiness <= 20) {
+    img.src = "images/orca1.png";
+  } else if (happiness <= 100) {
+    img.src = "images/orca2.png";
+  } else if (happiness <= 250) {
+    img.src = "images/orca3.png";
+  } else if (happiness <= 500) {
+    img.src = "images/orca4.png";
+  } else {
+    img.src = "images/orca5.png";
+  }
+}
+document.addEventListener('DOMContentLoaded', () => {
+  // コンテナを指定
+  const section = document.querySelector('.bubble-background');
+
+  // 泡を生成する関数
+  const createBubble = () => {
+    const bubbleEl = document.createElement('span');
+    bubbleEl.className = 'bubble';
+    const minSize = 10;
+    const maxSize = 50;
+    const size = Math.random() * (maxSize + 1 - minSize) + minSize;
+    bubbleEl.style.width = `${size}px`;
+    bubbleEl.style.height = `${size}px`;
+    bubbleEl.style.left = Math.random() * innerWidth + 'px';
+    section.appendChild(bubbleEl);
+
+    // 一定時間が経てば泡を消す
+    setTimeout(() => {
+      bubbleEl.remove();
+    }, 8000);
+  }
+
+  // 泡の生成を開始するトリガー（初期値はOFF）
+  let activeBubble = null;
+
+  // 泡の生成をストップする関数
+  const stopBubble = () => {
+    clearInterval(activeBubble);
+  };
+
+  // Intersection observerに渡すコールバック関数
+  const cb = (entries) => {
+    entries.forEach(entry => {
+      if(entry.isIntersecting) {
+        activeBubble = setInterval(createBubble, 300);
+      } else {
+        stopBubble();
+      }
+    })
+  };
+
+  // Intersection observerに渡すオプション
+  const options = {
+    rootMargin: "100px 0px"
+  }
+
+  // Intersection observerの初期化
+  const io = new IntersectionObserver(cb, options);
+  io.POLL_INTERVAL = 100; // Polyfill
+  io.observe(section);
+});
+
+function render() {
+
+  const game = document.getElementById("game");
+
+  // TRUE END
+  if (happiness >= 1000) {
+
+    game.innerHTML = `
+      <h2>🏆 TRUE END 🏆</h2>
+
+      <img src="images/orca_king.png" width="350">
+
+      <p>✨シャチは伝説のシャチへ進化した！✨</p>
+      <p>みんなに愛される海の王者になりました。</p>
+
+      <p>最終スコア: ${score}</p>
+      <p>幸せ度: ${happiness}</p>
+
+      <button onclick="resetGame()">
+        もう一度遊ぶ
+      </button>
+    `;
+
+    return;
+  }
+
+  updateOrcaImage();
+
+  // ゲーム中
+  if (index < questions.length && happiness > 0) {
+
+    const q = questions[index];
+
+    game.innerHTML = `
+      <h2>${q.question}</h2>
+
+      ${q.options.map(opt =>
+        `<button onclick="answer('${opt}')">${opt}</button>`
+      ).join("")}
+
+      <p>😊 幸せ度: ${happiness} ⭐ ポイント: ${score}</p>
+
+      <div>
+
+      ${score >= 10 ? `
+      <button onclick="feedOrca(
+        10,50,'🐟 小魚（-10pt）','images/smallfish.png'
+      )">
+      🐟 小魚
+      </button>
+      ` : ""}
+
+      ${score >= 20 ? `
+      <button onclick="feedOrca(
+        20,130,'🍣 サーモン（-20pt）','images/salmon.png'
+      )">
+      🍣 サーモン
+      </button>
+      ` : ""}
+
+      ${score >= 30 ? `
+      <button onclick="feedOrca(
+        30,200,'🐟 マグロ（-30pt）','images/tuna.png'
+      )">
+      🐟 マグロ
+      </button>
+      ` : ""}
+
+      </div>
+
+      <p id="result" style="font-size:30px;font-weight:bold;">
+        ${resultMessage}
+      </p>
+    `;
+
+  } else {
+
+    let message = "";
+
+    if (happiness <= 0) {
+      message = "💔 シャチの幸せ度が0になってしまいました...";
+    } else {
+      message = "🎉 すべての問題をクリア！";
+    }
+
+    game.innerHTML = `
+      <h2>ゲーム終了！</h2>
+
+      <p>${message}</p>
+
+      <p>最終スコア: ${score}</p>
+      <p>幸せ度: ${happiness}</p>
+
+      <button onclick="resetGame()">
+        もう一度遊ぶ
+      </button>
+    `;
+  }
+}
+
+function feedOrca(cost, heal, foodName, imageFile) {
+
+  if (score < cost) return;
+
+  score -= cost;
+  happiness += heal;
+
+  if (happiness > 1000) happiness = 1000;
+
+  resultMessage =
+    `${foodName}を食べた！😊 幸福度 +${heal}`;
+
+  const food = document.getElementById("foodImage");
+
+  food.src = imageFile;
+  food.style.display = "block";
+  food.style.top = "180px";
+  food.style.opacity = "1";
+
+  setTimeout(() => {
+    food.style.top = "120px";
+    food.style.opacity = "0";
+  }, 50);
+
+  setTimeout(() => {
+    food.style.display = "none";
+  }, 1000);
+
+  render();
+}
+function shuffleQuestions() {
+  for (let i = questions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+
+    [questions[i], questions[j]] =
+    [questions[j], questions[i]];
+  }
+}
+let resultMessage = "";
+function answer(option) {
+  const q = questions[index];
+
+  if (option === q.answer) {
+    score++;
+    happiness += 10;
+    resultMessage = "⭕ 正解！";
+  } else {
+    happiness -= 10;
+    resultMessage = "❌ ざんねん！ 正解は「" + q.answer + "」";
+  }
+
+  index++;
+
+  setTimeout(() => {
+    render();
+  }, 1000);
+
+  render();
+}
+
+function checkAnswer(selectedAnswer) {
+  if (selectedAnswer === questions[currentQuestion].answer) {
+    score++;
+
+    document.getElementById("result").textContent = "⭕ 正解！";
+    document.getElementById("result").style.color = "green";
+
+  } else {
+
+    document.getElementById("result").textContent =
+      "❌ ざんねん！ 正解は「" + questions[currentQuestion].answer + "」";
+    document.getElementById("result").style.color = "red";
+  }
+
+  // 1.5秒後に次の問題へ
+  setTimeout(() => {
+    currentQuestion++;
+    showQuestion();
+  }, 1500);
+}
+function resetGame() {
+  index = 0;
+  score = 0;
+  happiness = 50;
+
+  shuffleQuestions(); // 問題を再シャッフル
+
+  render();
+}
+
+
+
+shuffleQuestions();
+
+render();
+</script>
+
+</body>
+</html>
